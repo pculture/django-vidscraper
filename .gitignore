@@ -2,3 +2,4 @@
 *~
 /*.egg-info/
 /.tox/
+/test_project/db.sqlite3
