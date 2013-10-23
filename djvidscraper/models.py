@@ -331,6 +331,10 @@ class Video(models.Model):
         max_length=255)
     guid = models.CharField(max_length=250, blank=True)
 
+    # Technically duplication, but the only other way to get this would
+    # be to check the import step's import's feed. Which would be silly.
+    feed = models.ForeignKey(Feed, blank=True, null=True)
+
     # Owner info. Owner is the person who created the video. Should always
     # have editing access.
     owner = models.ForeignKey('auth.User', null=True, blank=True)
@@ -363,7 +367,8 @@ class Video(models.Model):
 
     @classmethod
     def from_vidscraper_video(cls, video, status=None, commit=True,
-                              feed=None, sites=None):
+                              feed=None, sites=None, owner=None,
+                              owner_email=None, owner_session=None):
         """
         Builds a :class:`Video` instance from a
         :class:`vidscraper.videos.Video` instance. If `commit` is False,
@@ -377,19 +382,23 @@ class Video(models.Model):
             status = cls.NEEDS_MODERATION
 
         instance = cls(
-            guid=video.guid or '',
-            name=video.title or '',
-            description=video.description or '',
-            published_datetime=now() if status == cls.PUBLISHED else None,
-            status=status,
-            external_url=video.link or '',
-            external_published_datetime=video.publish_datetime,
-            external_thumbnail_url=video.thumbnail_url or '',
+            original_url=video.url,
+            web_url=video.link or '',
             embed_code=video.embed_code or '',
             flash_enclosure_url=video.flash_enclosure_url or '',
+            name=video.title or '',
+            description=video.description or '',
+            guid=video.guid or '',
+            feed=feed,
+            owner=owner,
+            owner_email=owner_email or '',
+            owner_session=owner_session,
             external_user_username=video.user or '',
             external_user_url=video.user_url or '',
-            feed=feed,
+            external_thumbnail_url=video.thumbnail_url or '',
+            external_published_datetime=video.publish_datetime,
+            status=status,
+            published_datetime=now() if status == cls.PUBLISHED else None,
         )
 
         if not sites:

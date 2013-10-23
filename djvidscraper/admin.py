@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from djvidscraper.forms import CreateVideoForm
 from djvidscraper.models import Feed, Video, VideoFile
 
 
@@ -48,7 +49,36 @@ class VideoAdmin(admin.ModelAdmin):
                        'published_datetime')
         }),
     )
+    add_fieldsets = (
+        (None, {
+            'fields': ('original_url',)
+        }),
+    )
     inlines = [VideoFileInline]
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return self.add_fieldsets
+        return super(VideoAdmin, self).get_fieldsets(request, obj)
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Different form during video creation.
+
+        """
+        defaults = {}
+        if obj is None:
+            defaults.update({
+                'form': CreateVideoForm,
+                'fields': admin.util.flatten_fieldsets(self.add_fieldsets),
+            })
+        defaults.update(kwargs)
+        return super(VideoAdmin, self).get_form(request, obj, **defaults)
+
+    def get_inline_instances(self, request, obj=None):
+        if obj is None:
+            return []
+        return super(VideoAdmin, self).get_inline_instances(request, obj)
 
 
 admin.site.register(Feed, admin.ModelAdmin)
