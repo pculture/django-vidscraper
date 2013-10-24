@@ -333,7 +333,8 @@ class Video(models.Model):
 
     # Technically duplication, but the only other way to get this would
     # be to check the import step's import's feed. Which would be silly.
-    feed = models.ForeignKey(Feed, blank=True, null=True)
+    feed = models.ForeignKey(Feed, blank=True, null=True,
+                             related_name='videos')
 
     # Owner info. Owner is the person who created the video. Should always
     # have editing access.
