@@ -16,9 +16,11 @@ class VideoAdmin(admin.ModelAdmin):
         'published_datetime',
     )
     raw_id_fields = ('owner_session', 'owner')
+    radio_fields = {'status': admin.VERTICAL}
+    list_filter = ('status', 'created_timestamp')
     fieldsets = (
         (None, {
-            'fields': ('original_url',)
+            'fields': ('original_url', 'status')
         }),
         ('Metadata', {
             'fields': ('name',
@@ -55,6 +57,15 @@ class VideoAdmin(admin.ModelAdmin):
         }),
     )
     inlines = [VideoFileInline]
+    actions = ['hide_videos', 'publish_videos']
+
+    def hide_videos(self, request, queryset):
+        queryset.update(status=Video.HIDDEN)
+    hide_videos.short_description = 'Hide selected videos'
+
+    def publish_videos(self, request, queryset):
+        queryset.update(status=Video.PUBLISHED)
+    publish_videos.short_description = 'Publish selected videos'
 
     def get_fieldsets(self, request, obj=None):
         if obj is None:
