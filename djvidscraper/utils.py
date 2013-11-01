@@ -49,7 +49,7 @@ def download_thumbnail(url, instance, field_name):
     im = Image.open(temp)
     im.verify()
 
-    ext = os.splitext(urlparse.urlsplit(url).path)[1]
+    ext = os.path.splitext(urlparse.urlsplit(url).path)[1]
 
     args = (url, now().isoformat())
     filename = ''.join((make_hash(*args, step=2), ext))
