@@ -3,5 +3,6 @@
 /*.egg-info/
 /.tox/
 /test_project/db.sqlite3
+/test_project/media/
 /Gemfile.lock
 /djvidscraper/.sass-cache

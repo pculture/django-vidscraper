@@ -6,6 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" href="{% static 'djvidscraper/css/screen.css' %}" media="screen">
+      <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
   </head>
   <body>
     <nav class="navbar navbar-fixed-top navbar-inverse" role="navigation">
@@ -34,6 +35,10 @@
       </div><!-- /.navbar-collapse -->
     </nav>
 
+    <div class='container'>
+      {% block main %}
+      {% endblock %}
+    </div>
 
     <!-- Footer scripts -->
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
