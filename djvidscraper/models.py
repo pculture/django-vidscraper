@@ -6,6 +6,7 @@ import warnings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.core.urlresolvers import reverse
 from django.core.validators import ipv4_re
 from django.db import models
 from django.utils.timezone import now
@@ -259,9 +260,8 @@ class Feed(models.Model):
         imp.save()
         imp.run()
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('localtv_list_feed', [self.pk])
+        return reverse('djvidscraper_feed_detail', kwargs={'pk': self.pk})
 
     def get_iterators(self):
         iterator = vidscraper.auto_feed(
@@ -365,6 +365,9 @@ class Video(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('djvidscraper_video_detail', kwargs={'pk': self.pk})
 
     @classmethod
     def from_vidscraper_video(cls, video, status=None, commit=True,
