@@ -5,13 +5,11 @@
 {% block body_classes %}index{% endblock %}
 
 {% block nav %}
-  <div class='navbar-wrapper'>
+  <nav class="navbar navbar-inverse navbar-carousel" role="navigation">
     <div class='container'>
-      <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-        {% include 'djvidscraper/_nav.html' %}
-      </nav>
+      {% include 'djvidscraper/_nav.html' %}
     </div>
-  </div>
+  </nav>
 {% endblock %}
 
 {% block content %}

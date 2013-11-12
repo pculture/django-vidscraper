@@ -3036,10 +3036,10 @@ input[type="button"].btn-block {
       margin-right: 0;
       margin-left: 0; } }
 
-.navbar-static-top {
+.navbar-static-top, .navbar-carousel {
   border-width: 0 0 1px; }
   @media (min-width: 768px) {
-    .navbar-static-top {
+    .navbar-static-top, .navbar-carousel {
       border-radius: 0; } }
 
 .navbar-fixed-top,
@@ -4914,20 +4914,18 @@ body {
   color: #333;
   text-align: center; }
 
-.navbar-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%; }
-  .navbar-wrapper .navbar {
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    -ms-border-radius: 4px;
-    -o-border-radius: 4px;
-    border-radius: 4px; }
-  @media (min-width: 992px) {
-    .navbar-wrapper {
-      margin-top: 20px; } }
+.navbar-carousel {
+  margin-bottom: 0; }
+  @media (min-width: 768px) {
+    .navbar-carousel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1001;
+      background-color: rgba(34, 34, 34, 0.85);
+      color: #bbb;
+      border-bottom-color: #222222; } }
 
 .carousel {
   background-color: #000; }

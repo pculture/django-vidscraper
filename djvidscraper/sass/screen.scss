@@ -24,18 +24,19 @@ body {
 	text-align: center;
 }
 
-.navbar-wrapper{
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
+.navbar-carousel{
+	@extend .navbar-static-top;
+	margin-bottom: 0;
 
-	.navbar {
-		@include border-radius(4px);
-	}
-
-	@media (min-width: $screen-md) {
-		margin-top: 20px;
+	@media(min-width: $screen-sm){
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		z-index: 1001;
+		background-color: rgba(34, 34, 34, .85);
+		color: #bbb;
+		border-bottom-color: rgb(34, 34, 34);
 	}
 }
 
