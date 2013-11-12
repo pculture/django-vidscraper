@@ -1,11 +1,12 @@
 from django.contrib import admin
+from django.contrib.sites.admin import Site, SiteAdmin
 
 from djvidscraper.forms import CreateVideoForm
-from djvidscraper.models import Feed, Video, VideoFile
+from djvidscraper.models import Feed, Video, VideoFile, FeaturedVideo
 
 
 class VideoFileInline(admin.TabularInline):
-    extras = 0
+    extra = 0
     model = VideoFile
 
 
@@ -94,3 +95,18 @@ class VideoAdmin(admin.ModelAdmin):
 
 admin.site.register(Feed, admin.ModelAdmin)
 admin.site.register(Video, VideoAdmin)
+
+
+class FeaturedVideoInline(admin.TabularInline):
+    model = FeaturedVideo
+    extra = 1
+    raw_id_fields = ('video',)
+    ordering = ('order', '-created_timestamp')
+
+
+class NewSiteAdmin(SiteAdmin):
+    inlines = (FeaturedVideoInline,)
+
+
+admin.site.unregister(Site)
+admin.site.register(Site, NewSiteAdmin)

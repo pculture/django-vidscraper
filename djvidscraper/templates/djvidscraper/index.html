@@ -1,1 +1,48 @@
 {% extends 'djvidscraper/__base.html' %}
+
+{% load daguerre %}
+
+{% block body_classes %}index{% endblock %}
+
+{% block nav %}
+  <div class='navbar-wrapper'>
+    <div class='container'>
+      <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+        {% include 'djvidscraper/_nav.html' %}
+      </nav>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="indexCarousel" class="carousel slide" data-ride="carousel">
+    <!-- Indicators -->
+    {% if videos %}
+      <ol class="carousel-indicators">
+        {% for video in videos %}
+          <li data-target="#indexCarousel" data-slide-to="{{ forloop.counter0 }}"{% if forloop.first %} class="active"{% endif %}></li>
+        {% endfor %}
+      </ol>
+      <div class="carousel-inner">
+        {% adjust_bulk videos 'thumbnail' 'fill' width=900 height=500 as adjusted %}
+        {% for video, image in adjusted %}
+          <div class="item{% if forloop.first %} active{% endif %}">
+            <a class='carousel-play' href="{{ video.get_absolute_url }}"><i class='fa fa-play'></i></a>
+            {% if image %}
+              <img src="{{ image }}" />
+            {% else %}
+              <i class="fa fa-film fa-carousel"></i>
+            {% endif %}
+            <div class="container">
+              <div class="carousel-caption">
+                <h1>{{ video.name }}</h1>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <a class="left carousel-control" href="#indexCarousel" data-slide="prev"><i class="fa fa-chevron-left"></i></a>
+      <a class="right carousel-control" href="#indexCarousel" data-slide="next"><i class="fa fa-chevron-right"></i></a>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -491,6 +491,18 @@ class VideoFile(models.Model):
                     self.mimetype = guess[0]
 
 
+class FeaturedVideo(models.Model):
+    """M2M connecting sites to videos."""
+    site = models.ForeignKey(Site)
+    video = models.ForeignKey(Video)
+    order = models.PositiveSmallIntegerField(default=1)
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('site', 'video')
+        ordering = ('order', 'created_timestamp')
+
+
 class WatchManager(models.Manager):
     def from_request(self, request, video):
         """

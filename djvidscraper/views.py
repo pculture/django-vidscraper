@@ -1,3 +1,4 @@
+from django.contrib.sites.models import Site
 from django.http import Http404
 from django.views.generic import ListView, DetailView, TemplateView
 
@@ -9,7 +10,10 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(IndexView, self).get_context_data(**kwargs)
-        context['videos'] = Video.objects.filter(status=Video.PUBLISHED)[:5]
+        site = Site.objects.get_current()
+        featured = site.featuredvideo_set.filter(video__status=Video.PUBLISHED
+                                                 ).select_related('video')[:5]
+        context['videos'] = [f.video for f in featured]
         return context
 
 

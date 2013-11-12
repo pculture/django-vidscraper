@@ -1,0 +1,21 @@
+<!-- Brand and toggle get grouped for better mobile display -->
+<div class="navbar-header">
+  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".top-collapse">
+    <span class="sr-only">Toggle navigation</span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+    <span class="icon-bar"></span>
+  </button>
+  <a class="navbar-brand" href="/">{{ site.name }}</a>
+</div>
+
+<!-- Collect the nav links, forms, and other content for toggling -->
+<div class="collapse navbar-collapse top-collapse">
+  <ul class="nav navbar-nav">
+    {% url 'djvidscraper_video_list' as url %}
+    <li{% if url == request.path %} class='active'{% endif %}><a href="{{ url }}">Watch</a></li>
+
+    {% url 'djvidscraper_feed_list' as url %}
+    <li{% if url == request.path %} class='active'{% endif %}><a href="{{ url }}">Feeds</a></li>
+  </ul>
+</div>

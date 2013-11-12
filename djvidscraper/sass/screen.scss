@@ -1,7 +1,12 @@
 @import "bootstrap";
+@import "compass";
 
 body {
 	padding-top: 70px;
+
+	&.index{
+		padding-top: 0px;
+	}
 }
 
 .fa-thumbnail {
@@ -9,4 +14,101 @@ body {
 	max-width:100%;
 	font-size:150px;
 	color: #000;
+}
+
+.fa-carousel {
+	width: 900px;
+	max-width: 100%;
+	font-size: 500px;
+	color: #333;
+	text-align: center;
+}
+
+.navbar-wrapper{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+
+	.navbar {
+		@include border-radius(4px);
+	}
+
+	@media (min-width: $screen-md) {
+		margin-top: 20px;
+	}
+}
+
+.carousel {
+	background-color: #000;
+}
+
+.carousel-inner{
+	max-width: 900px;
+	margin: 0 auto;
+}
+
+.carousel-play {
+	position: absolute;
+	z-index: 1000;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	@include text-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+	opacity: 0;
+	@include transition(opacity 400ms ease-in-out);
+
+	&:hover {
+		opacity: 1;
+	}
+
+	.fa-play {
+		font-size: 120px;
+		color: #fff;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		display: inline-block;
+		margin-top: -120px * .5;
+		margin-left: -94px * .5;
+	}
+}
+
+.carousel-indicators{
+	z-index: 1001;
+
+	li{
+		border-width: 0;
+		background-color: #fff;
+		opacity: .5;
+		@include transition(opacity 400ms ease-in-out);
+
+		&.active {
+			opacity: 1;
+		}
+	}
+}
+
+// Drop these down a bit.
+.carousel-indicators, .carousel-caption{
+	bottom: 0px;
+}
+
+.carousel-control {
+	@include transition(opacity 250ms ease-in-out);
+}
+
+.carousel-control.left i{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: inline-block;
+}
+
+.carousel-control.right i{
+	position: absolute;
+	top: 50%;
+	right: 50%;
+	display: inline-block;
 }
