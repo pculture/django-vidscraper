@@ -16,6 +16,8 @@
         </a>
         <h3>{{ video.name }}</h3>
       </div>
+      {% cycle '' '<div class="clearfix visible-xs"></div>' %}
+      {% cycle '' '' '' '<div class="clearfix hidden-xs"></div>' %}
     {% endfor %}
   </div>
 {% endblock %}
