@@ -33,7 +33,7 @@ class FeedDetailView(ListView):
     template_name = 'djvidscraper/feeds/detail.html'
     context_object_name = 'videos'
 
-    def get_objects(self):
+    def get_queryset(self):
         try:
             self.feed = Feed.objects.get(pk=self.kwargs['pk'])
         except Feed.DoesNotExist:

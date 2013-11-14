@@ -1,1 +1,9 @@
-{% extends 'djvidscraper/__base.html' %}
+{% extends 'djvidscraper/videos/list.html' %}
+
+{% load daguerre %}
+
+{% block main %}
+	<h1>{{ feed.name }}</h1>
+
+	{{ block.super }}
+{% endblock %}
