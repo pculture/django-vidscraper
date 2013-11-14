@@ -1,1 +1,21 @@
 {% extends 'djvidscraper/__base.html' %}
+
+{% load daguerre %}
+
+{% block main %}
+  <div class='row'>
+    {% adjust_bulk feeds 'thumbnail' 'fill' width=300 height=200 as adjusted %}
+    {% for feed, image in adjusted %}
+      <div class='col-xs-6 col-sm-3'>
+        <a class='thumbnail text-center' href="{{ feed.get_absolute_url }}">
+          {% if image %}
+            <img src="{{ image }}" />
+          {% else %}
+            <i class='fa fa-film fa-thumbnail'></i>
+          {% endif %}
+        </a>
+        <h3>{{ feed.name }}</h3>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

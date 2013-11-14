@@ -43,7 +43,7 @@ class FeedImport(models.Model):
     #: Denormalized field displaying (eventually accurate) count of
     #: videos imported during the import process.
     import_count = models.PositiveIntegerField(default=0)
-    feed = models.ForeignKey('Feed')
+    feed = models.ForeignKey('Feed', related_name='imports')
 
     class Meta:
         get_latest_by = 'created_timestamp'
@@ -83,63 +83,64 @@ class FeedImport(models.Model):
             FeedImportIdentifier.objects.create(**kwargs)
 
     def run(self):
-        auto_authors = list(self.feed.auto_authors.all())
-        auto_categories = list(self.feed.auto_categories.all())
+        feed = self.feed
         try:
-            iterators = self.feed.get_iterators()
+            iterator = feed.get_iterator()
+            iterator.load()
+            feed.update_metadata(iterator)
         except Exception:
             self.record_step(FeedImportStep.IMPORT_ERRORED,
                              with_traceback=True)
             return
-        for iterator in iterators:
-            try:
-                for vidscraper_video in iterator:
-                    try:
-                        vidscraper_video.load()
-                        if self.is_seen(vidscraper_video):
-                            self.record_step(FeedImportStep.VIDEO_SEEN)
-                            if self.feed.stop_if_seen:
-                                break
-                            else:
-                                continue
-                        video = Video.from_vidscraper_video(
-                            vidscraper_video,
-                            status=Video.UNPUBLISHED,
-                            commit=False,
-                            feed=self.feed,
-                            sites=self.feed.sites.all(),
-                            authors=auto_authors,
-                            categories=auto_categories,
-                            update_index=False,
-                        )
-                        try:
-                            video.clean_fields()
-                            video.validate_unique()
-                        except ValidationError:
-                            self.record_step(FeedImportStep.VIDEO_INVALID,
-                                             with_traceback=True)
 
-                        video.save(update_index=False)
-                        try:
-                            video.save_m2m()
-                        except Exception:
-                            video.delete()
-                            raise
-                        self.mark_seen(vidscraper_video)
-                        self.record_step(FeedImportStep.VIDEO_IMPORTED,
-                                         video=video)
-                    except Exception:
-                        self.record_step(FeedImportStep.VIDEO_ERRORED,
+        try:
+            for vidscraper_video in iterator:
+                try:
+                    vidscraper_video.load()
+                    if self.is_seen(vidscraper_video):
+                        self.record_step(FeedImportStep.VIDEO_SEEN)
+                        if feed.stop_if_seen:
+                            break
+                        else:
+                            continue
+                    video = Video.from_vidscraper_video(
+                        vidscraper_video,
+                        status=Video.UNPUBLISHED,
+                        commit=False,
+                        feed=feed,
+                        sites=feed.sites.all(),
+                        owner=feed.owner,
+                        owner_email=feed.owner_email,
+                        owner_session=feed.owner_session,
+                    )
+                    try:
+                        video.clean_fields()
+                        video.validate_unique()
+                    except ValidationError:
+                        self.record_step(FeedImportStep.VIDEO_INVALID,
                                          with_traceback=True)
-                    # Update timestamp (and potentially counts) after each
-                    # video.
-                    self.save()
-            except Exception:
-                self.record_step(FeedImportStep.IMPORT_ERRORED,
-                                 with_traceback=True)
+
+                    video.save()
+                    try:
+                        video.save_m2m()
+                    except Exception:
+                        video.delete()
+                        raise
+                    self.mark_seen(vidscraper_video)
+                    self.record_step(FeedImportStep.VIDEO_IMPORTED,
+                                     video=video)
+                except Exception:
+                    self.record_step(FeedImportStep.VIDEO_ERRORED,
+                                     with_traceback=True)
+                # Update timestamp (and potentially counts) after each
+                # video.
+                self.save()
+        except Exception:
+            self.record_step(FeedImportStep.IMPORT_ERRORED,
+                             with_traceback=True)
 
         # Pt 2: Mark videos active all at once.
-        if not self.feed.moderate_imported_videos:
+        if not feed.moderate_imported_videos:
             to_publish = Video.objects.filter(feedimportstep__feed_import=self,
                                               status=Video.UNPUBLISHED)
             for receiver, response in pre_feed_import_publish.send_robust(
@@ -230,11 +231,17 @@ class Feed(models.Model):
     modified_timestamp = models.DateTimeField(auto_now=True)
     created_timestamp = models.DateTimeField(auto_now_add=True)
 
+    # Import settings
     moderate_imported_videos = models.BooleanField(default=False)
-    disable_automatic_imports = models.BooleanField(default=False)
+    enable_automatic_imports = models.BooleanField(default=True)
 
     # Feeds are expected to stay in the same order.
     stop_if_seen = models.BooleanField(default=True)
+
+    should_update_metadata = models.BooleanField(
+        default=True,
+        verbose_name="Update metadata on next import"
+    )
 
     #: Original url entered by a user when adding this feed.
     original_url = models.URLField(max_length=400)
@@ -245,14 +252,23 @@ class Feed(models.Model):
     #: Webpage where the contents of this feed could be browsed.
     web_url = models.URLField(blank=True, max_length=400)
 
+    # Owner info. Owner is the person who created the video. Should always
+    # have editing access.
+    owner = models.ForeignKey('auth.User', null=True, blank=True)
+    owner_email = models.EmailField(max_length=250,
+                                    blank=True)
+    owner_session = models.ForeignKey('sessions.Session',
+                                      blank=True, null=True)
+
     # Cached information from the import.
     external_etag = models.CharField(max_length=250, blank=True)
-    external_last_modified = models.DateTimeField()
-
-    update_metadata = models.BooleanField(default=True)
+    external_last_modified = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('djvidscraper_feed_detail', kwargs={'pk': self.pk})
 
     def start_import(self):
         imp = FeedImport()
@@ -260,43 +276,41 @@ class Feed(models.Model):
         imp.save()
         imp.run()
 
-    def get_absolute_url(self):
-        return reverse('djvidscraper_feed_detail', kwargs={'pk': self.pk})
-
-    def get_iterators(self):
-        iterator = vidscraper.auto_feed(
+    def get_iterator(self):
+        return vidscraper.auto_feed(
             self.original_url,
-            # We'll stop at the first previously-seen video.
             max_results=None,
             api_keys=get_api_keys(),
+            etag=self.external_etag or None,
+            last_modified=self.external_last_modified,
         )
-        iterator.load()
+    get_iterator.alters_data = True
 
+    def update_metadata(self, iterator):
         save = False
 
+        # Always update etag and last_modified.
         etag = getattr(iterator, 'etag', None) or ''
-        if (etag and etag != self.etag):
-            self.etag = etag
+        if (etag and etag != self.external_etag):
+            self.external_etag = etag
             save = True
 
-        if self.update_metadata:
-            # If these fields have already been changed, don't
-            # override those changes. Don't unset the name field
-            # if no further data is available.
-            if self.name == self.original_url:
-                self.name = iterator.title or self.name
-            if not self.external_url:
-                self.external_url = iterator.webpage or ''
-            if not self.description:
-                self.description = iterator.description or ''
-            # Only do this on the first run (for now.)
-            self.update_metadata = False
+        last_modified = getattr(iterator, 'last_modified', None)
+        if last_modified is not None:
+            self.external_last_modified = last_modified
+            save = True
+
+        # If the feed metadata is marked to be updated, do it.
+        if self.should_update_metadata:
+            self.name = iterator.title or self.original_url
+            self.external_url = iterator.webpage or ''
+            self.description = iterator.description or ''
+            # Only update metadata once.
+            self.should_update_metadata = False
             save = True
 
         if save:
             self.save()
-
-        return [iterator]
 
 
 class Video(models.Model):

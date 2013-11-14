@@ -1,8 +1,32 @@
 from django.contrib import admin
 from django.contrib.sites.admin import Site, SiteAdmin
 
-from djvidscraper.forms import CreateVideoForm
+from djvidscraper.forms import CreateVideoForm, CreateFeedForm
 from djvidscraper.models import Feed, Video, VideoFile, FeaturedVideo
+
+
+class AddAdmin(admin.ModelAdmin):
+    add_fieldsets = None
+    add_form = None
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return self.add_fieldsets
+        return super(AddAdmin, self).get_fieldsets(request, obj)
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Different form during video creation.
+
+        """
+        defaults = {}
+        if obj is None:
+            defaults.update({
+                'form': self.add_form,
+                'fields': admin.util.flatten_fieldsets(self.add_fieldsets),
+            })
+        defaults.update(kwargs)
+        return super(AddAdmin, self).get_form(request, obj, **defaults)
 
 
 class VideoFileInline(admin.TabularInline):
@@ -10,7 +34,8 @@ class VideoFileInline(admin.TabularInline):
     model = VideoFile
 
 
-class VideoAdmin(admin.ModelAdmin):
+class VideoAdmin(AddAdmin):
+    add_form = CreateVideoForm
     readonly_fields = (
         'modified_timestamp',
         'created_timestamp',
@@ -68,32 +93,63 @@ class VideoAdmin(admin.ModelAdmin):
         queryset.update(status=Video.PUBLISHED)
     publish_videos.short_description = 'Publish selected videos'
 
-    def get_fieldsets(self, request, obj=None):
-        if obj is None:
-            return self.add_fieldsets
-        return super(VideoAdmin, self).get_fieldsets(request, obj)
-
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Different form during video creation.
-
-        """
-        defaults = {}
-        if obj is None:
-            defaults.update({
-                'form': CreateVideoForm,
-                'fields': admin.util.flatten_fieldsets(self.add_fieldsets),
-            })
-        defaults.update(kwargs)
-        return super(VideoAdmin, self).get_form(request, obj, **defaults)
-
     def get_inline_instances(self, request, obj=None):
         if obj is None:
             return []
         return super(VideoAdmin, self).get_inline_instances(request, obj)
 
+    def save_form(self, request, form, change):
+        return form.save(commit=False, request=request)
 
-admin.site.register(Feed, admin.ModelAdmin)
+
+class FeedAdmin(AddAdmin):
+    add_form = CreateFeedForm
+    add_fieldsets = (
+        (None, {
+            'fields': ('original_url',
+                       'moderate_imported_videos',
+                       'enable_automatic_imports'),
+        }),
+    )
+    fieldsets = (
+        (None, {
+            'fields': ('original_url',)
+        }),
+        ('Metadata', {
+            'fields': ('name', 'description', 'web_url', 'thumbnail'),
+        }),
+        ('Import settings', {
+            'fields': ('moderate_imported_videos',
+                       'enable_automatic_imports',
+                       'stop_if_seen',
+                       'should_update_metadata')
+        }),
+        ('Owner', {
+            'fields': ('owner', 'owner_email', 'owner_session'),
+        }),
+        ('External data', {
+            'description': "These fields should generally not need "
+                           "to be edited.",
+            'classes': ('collapse',),
+            'fields': ('external_etag',
+                       'external_last_modified')
+        }),
+        ('Internal data', {
+            'classes': ('collapse',),
+            'fields': ('created_timestamp',
+                       'modified_timestamp')
+        }),
+    )
+    readonly_fields = (
+        'modified_timestamp',
+        'created_timestamp',
+    )
+
+    def save_form(self, request, form, change):
+        return form.save(commit=False, request=request)
+
+
+admin.site.register(Feed, FeedAdmin)
 admin.site.register(Video, VideoAdmin)
 
 

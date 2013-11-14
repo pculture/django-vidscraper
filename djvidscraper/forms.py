@@ -5,9 +5,6 @@ from djvidscraper.models import Video
 
 
 class CreateVideoForm(forms.ModelForm):
-    class Meta:
-        fields = ('original_url',)
-
     def save(self, commit=True, request=None):
         kwargs = {
             'video': vidscraper.auto_scrape(self.cleaned_data['original_url']),
@@ -26,5 +23,24 @@ class CreateVideoForm(forms.ModelForm):
             instance.save()
             save_m2m()
         else:
+            self.save_m2m = save_m2m
+        return instance
+
+
+class CreateFeedForm(forms.ModelForm):
+    def save(self, commit=True, request=None):
+        if request and request.user.is_authenticated():
+            self.instance.owner = request.user
+
+        instance = super(CreateFeedForm, self).save(commit)
+
+        if commit:
+            instance.start_import()
+        else:
+            old_save_m2m = self.save_m2m
+
+            def save_m2m():
+                old_save_m2m()
+                instance.start_import()
             self.save_m2m = save_m2m
         return instance
