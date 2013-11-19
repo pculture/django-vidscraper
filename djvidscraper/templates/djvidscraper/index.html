@@ -1,6 +1,6 @@
 {% extends 'djvidscraper/__base.html' %}
 
-{% load daguerre %}
+{% load daguerre staticfiles %}
 
 {% block body_classes %}index{% endblock %}
 
@@ -23,14 +23,11 @@
       </ol>
       <div class="carousel-inner">
         {% adjust_bulk videos 'thumbnail' 'fill' width=900 height=500 as adjusted %}
+        {% static 'djvidscraper/images/holder-carousel.png' as holder %}
         {% for video, image in adjusted %}
           <div class="item{% if forloop.first %} active{% endif %}">
             <a class='carousel-play' href="{{ video.get_absolute_url }}"><i class='fa fa-play'></i></a>
-            {% if image %}
-              <img src="{{ image }}" />
-            {% else %}
-              <i class="fa fa-film fa-carousel"></i>
-            {% endif %}
+            <img src="{{ image|default:holder }}" />
             <div class="container">
               <div class="carousel-caption">
                 <h1>{{ video.name }}</h1>

@@ -9,21 +9,6 @@ body {
 	}
 }
 
-.fa-thumbnail {
-	width:300px;
-	max-width:100%;
-	font-size:150px;
-	color: #000;
-}
-
-.fa-carousel {
-	width: 900px;
-	max-width: 100%;
-	font-size: 500px;
-	color: #333;
-	text-align: center;
-}
-
 .navbar-carousel{
 	@extend .navbar-static-top;
 	margin-bottom: 0;

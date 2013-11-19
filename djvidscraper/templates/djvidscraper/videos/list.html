@@ -1,18 +1,15 @@
 {% extends 'djvidscraper/__base.html' %}
 
-{% load daguerre %}
+{% load daguerre staticfiles %}
 
 {% block main %}
   <div class='row'>
     {% adjust_bulk videos 'thumbnail' 'fill' width=300 height=200 as adjusted %}
+    {% static 'djvidscraper/images/holder-list.png' as holder %}
     {% for video, image in adjusted %}
       <div class='col-xs-6 col-sm-3'>
         <a class='thumbnail text-center' href="{{ video.get_absolute_url }}">
-          {% if image %}
-            <img src="{{ image }}" />
-          {% else %}
-            <i class='fa fa-film fa-thumbnail'></i>
-          {% endif %}
+          <img src="{{ image|default:holder }}" />
         </a>
         <h3>{{ video.name }}</h3>
       </div>
