@@ -11,7 +11,7 @@
         <a class='thumbnail text-center' href="{{ feed.get_absolute_url }}">
           <img src="{{ image|default:holder }}" />
         </a>
-        <h3>{{ feed.name }}</h3>
+        <h5><a href="{{ feed.get_absolute_url }}">{{ feed.name }}</a></h5>
       </div>
       {% cycle '' '<div class="clearfix visible-xs"></div>' %}
       {% cycle '' '' '' '<div class="clearfix hidden-xs"></div>' %}
