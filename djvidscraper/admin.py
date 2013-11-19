@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.sites.admin import Site, SiteAdmin
 
 from djvidscraper.forms import CreateVideoForm, CreateFeedForm
@@ -43,7 +43,7 @@ class VideoAdmin(AddAdmin):
     )
     raw_id_fields = ('owner_session', 'owner')
     radio_fields = {'status': admin.VERTICAL}
-    list_filter = ('status', 'created_timestamp')
+    list_filter = ('status', 'created_timestamp', 'feed')
     fieldsets = (
         (None, {
             'fields': ('original_url', 'status')
@@ -145,8 +145,31 @@ class FeedAdmin(AddAdmin):
         'created_timestamp',
     )
 
+    actions = ['run_imports']
+
+    def _message_import_result(self, feed, request):
+        feed_import = feed.imports.latest()
+        if feed_import.is_complete:
+            if feed_import.import_count or not feed_import.error_count:
+                messages.success(request, "Imported {0} new videos"
+                                 "".format(feed_import.import_count))
+            if feed_import.error_count:
+                messages.error(request, "Encountered {0} errors"
+                               "".format(feed_import.error_count))
+
     def save_form(self, request, form, change):
         return form.save(commit=False, request=request)
+
+    def save_related(self, request, form, formsets, change):
+        # This is where form.save_m2m (which runs the imports) is called.
+        super(FeedAdmin, self).save_related(request, form, formsets, change)
+        self._message_import_result(form.instance, request)
+
+    def run_imports(self, request, queryset):
+        for feed in queryset:
+            feed.start_import()
+            self._message_import_result(feed, request)
+    run_imports.short_description = 'Run imports for selected feeds'
 
 
 admin.site.register(Feed, FeedAdmin)
